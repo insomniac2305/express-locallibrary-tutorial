@@ -1,12 +1,22 @@
 extends layout
 
+block append scripts
+  script(src="/javascripts/book_form.js" defer)
+
+
 block content
   h1= title
 
-  form(method='POST' action='')
+  form(method='POST' action='' enctype='multipart/form-data')
     div.form-group
       label(for='title') Title:
       input#title.form-control(type='text', placeholder='Name of book' name='title' required='true' value=(undefined===book ? '' : book.title) )
+    div.form-group
+      label(for='cover') Cover:
+      div.custom-file
+        input#cover.custom-file-input(type='file' name='cover' accept="image/*" value=(undefined===book ? '' : book.cover))
+        label#cover-label.custom-file-label(for='cover') Choose cover image
+      img#cover-preview(src=((book && book.cover) ? `/images/${book.cover}` : '' ) alt="Preview" style=`display: ${(book && book.cover) ? 'block' : 'none'}; max-height: 100px; width: auto; margin: 10px 0`)
     div.form-group
       label(for='author') Author:
       select#author.form-control(type='select', placeholder='Select author' name='author' required='true' )

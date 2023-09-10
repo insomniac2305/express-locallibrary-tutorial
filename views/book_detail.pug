@@ -3,6 +3,7 @@ extends layout
 block content
   h1 Title: #{book.title}
 
+  img(src=((book && book.cover) ? `/images/${book.cover}` : ''), alt="Book cover", style=`display: ${(book && book.cover) ? 'block' : 'none'}; max-height: 500px; width: auto; margin: 10px 0`)
   p #[strong Author:]
     a(href=book.author.url) #{book.author.name}
   p #[strong Summary:] #{book.summary}

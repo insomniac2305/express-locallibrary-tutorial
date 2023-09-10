@@ -5,6 +5,18 @@ const BookInstance = require("../models/bookinstance");
 
 const asyncHandler = require("express-async-handler");
 const { body, validationResult } = require("express-validator");
+const multer = require("multer");
+const upload = multer({ dest: "public/images/", fileFilter: filterImages });
+const fs = require("fs/promises");
+const path = require("path");
+
+function filterImages(req, file, cb) {
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+}
 
 exports.index = asyncHandler(async (req, res, next) => {
   // Get details of books, book instances, authors and genre counts (in parallel)
@@ -78,6 +90,8 @@ exports.book_create_post = [
     next();
   },
 
+  upload.single("cover"),
+
   // Validate and sanitize fields.
   body("title", "Title must not be empty.").trim().isLength({ min: 1 }).escape(),
   body("author", "Author must not be empty.").trim().isLength({ min: 1 }).escape(),
@@ -97,6 +111,7 @@ exports.book_create_post = [
       summary: req.body.summary,
       isbn: req.body.isbn,
       genre: req.body.genre,
+      cover: req.file.filename,
     });
 
     if (!errors.isEmpty()) {
@@ -159,6 +174,7 @@ exports.book_delete_post = asyncHandler(async (req, res, next) => {
     });
     return;
   } else {
+    await fs.unlink(path.join(process.cwd(), "public", "images", book.cover));
     await Book.findByIdAndRemove(req.params.id);
     res.redirect("/catalog/books");
   }
@@ -211,6 +227,8 @@ exports.book_update_post = [
     next();
   },
 
+  upload.single("cover"),
+
   // Validate and sanitize fields.
   body("title", "Title must not be empty.").trim().isLength({ min: 1 }).escape(),
   body("author", "Author must not be empty.").trim().isLength({ min: 1 }).escape(),
@@ -232,6 +250,10 @@ exports.book_update_post = [
       genre: typeof req.body.genre === "undefined" ? [] : req.body.genre,
       _id: req.params.id, // This is required, or a new ID will be assigned!
     });
+
+    if (req.file) {
+      book.cover = req.file.filename;
+    }
 
     if (!errors.isEmpty()) {
       // There are errors. Render form again with sanitized values/error messages.
